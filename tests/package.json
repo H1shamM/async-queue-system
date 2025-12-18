@@ -1,0 +1,11 @@
+{
+    "name": "integration-tests",
+    "private": true,
+    "scripts": {
+        "test": "jest --runInBand"
+    },
+    "dependencies": {
+        "jest": "^29.7.0",
+        "supertest": "^6.3.4"
+    }
+}

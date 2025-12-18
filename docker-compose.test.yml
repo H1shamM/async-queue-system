@@ -1,0 +1,41 @@
+services:
+  rabbitmq:
+    image:  rabbitmq:3-management
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+  
+  redis:
+    image: redis:7
+
+  
+  api:
+    build: ./api-service
+    env_file:
+      - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+  
+  worker:
+    build: ./worker-service
+    env_file:
+      - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    deploy:
+      replicas: 2
+      
+  tests:
+    build: ./tests
+    depends_on:
+      api:
+        condition: service_started

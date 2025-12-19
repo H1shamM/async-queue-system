@@ -115,6 +115,8 @@ app.get("/health", (req, res) => {
     })
 })
 
+let server;
+
 const startServer = async () => {
     try {
         await connectRabbitMQ()
@@ -130,18 +132,19 @@ const startServer = async () => {
     }
 }
 
-process.on("SIGTERM", () => {
+const shutdown = async () => {
     console.log("API shutting down...");
-    this.server.close(() => {
-        console.log("API stopped");
-        process.exit(0);
-    })
-})
+    if (server) server.close(() => { console.log("API stopped") })
+    await redis.quit()
+    process.exit(0);
+
+}
+process.on("SIGTERM", shutdown)
+process.on("SIGINT", shutdown)
 
 if (require.main === module) {
     startServer();
 }
-
 
 
 

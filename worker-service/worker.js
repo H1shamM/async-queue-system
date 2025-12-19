@@ -87,9 +87,14 @@ async function startWorker() {
 
             console.log(`Processing job:${job.jobId} retry ${retryCount}`);
             await redis.set(`job:${job.jobId}`, "PROCESSING")
+            await redis.set(`job:${job.jobId}:updated_at`, Date.now())
             await processJob(job)
             console.log("job succeeeded!")
-            await redis.set(jobKey, "SUCCESS", "EX", 3600);
+            await redis.set(jobKey, "SUCCESS");
+            await redis.set(`job:${jobId}:result`,
+                JSON.stringify({message: 'Email sent successfully'})
+            );
+            
             await metrics.incr("jobs_success")
 
             channel.ack(msg)
@@ -98,6 +103,9 @@ async function startWorker() {
                 console.log("Job sent DLQ");
                 channel.nack(msg, false, false)
                 await redis.set(`job:${job.jobId}`, "FAILED")
+                await redis.set(`job:${job.jobId}:error`,
+                   error.message || 'Unknown error' 
+                )
                 await metrics.incr("jobs_failed")
                 await metrics.incr("jobs_dlq")
 

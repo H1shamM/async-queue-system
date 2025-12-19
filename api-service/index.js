@@ -82,7 +82,15 @@ app.get("/jobs/:id", async (req, res) => {
         return res.status(404).json({ error: "Job not found" })
     }
 
-    res.json({ jobId, status })
+    const result = await redis.get(`job:${jobId}:result`)
+    const error = await redis.get(`job:${jobId}:error`)
+
+    res.json({ 
+        jobId, 
+        status,
+        result: result ? JSON.parse(result) : null,
+        error: error || null
+     })
 
 });
 
